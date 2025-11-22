@@ -30,7 +30,10 @@ app.get('/health', (req, res) => {
   });
 });
 
-// API Routes (to be implemented)
+// API Routes
+const authRoutes = require('./routes/auth');
+const familyRoutes = require('./routes/family');
+
 app.get('/api/v1', (req, res) => {
   res.json({ 
     message: 'FamTracker API v1',
@@ -42,6 +45,9 @@ app.get('/api/v1', (req, res) => {
     }
   });
 });
+
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/family', familyRoutes);
 
 // Socket.io connection handling
 io.on('connection', (socket) => {
