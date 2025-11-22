@@ -33,6 +33,7 @@ app.get('/health', (req, res) => {
 // API Routes
 const authRoutes = require('./routes/auth');
 const familyRoutes = require('./routes/family');
+const locationRoutes = require('./routes/location');
 
 app.get('/api/v1', (req, res) => {
   res.json({ 
@@ -48,6 +49,7 @@ app.get('/api/v1', (req, res) => {
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/family', familyRoutes);
+app.use('/api/v1/location', locationRoutes);
 
 // Socket.io connection handling
 io.on('connection', (socket) => {

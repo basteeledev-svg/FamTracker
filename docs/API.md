@@ -129,8 +129,10 @@ Get all members of a family group.
 
 ### Location Tracking
 
-#### POST /location/update
+#### POST /location
 Update user's current location.
+
+**Authentication Required:** Yes
 
 **Request:**
 ```json
@@ -139,9 +141,9 @@ Update user's current location.
   "longitude": -122.4194,
   "altitude": 10.5,
   "accuracy": 5.0,
-  "speed": 25.5,
-  "heading": 180.0,
-  "timestamp": "2025-11-21T10:30:00Z"
+  "speed": 15.6,
+  "heading": 90.0,
+  "family_id": 1
 }
 ```
 
@@ -149,54 +151,118 @@ Update user's current location.
 ```json
 {
   "success": true,
-  "speedLimit": 35,
-  "roadName": "Market Street"
+  "location": {
+    "id": 123,
+    "latitude": 37.7749,
+    "longitude": -122.4194,
+    "speed": 15.6,
+    "heading": 90,
+    "accuracy": 5.0,
+    "altitude": 10.5,
+    "timestamp": "2025-11-22T01:18:57.051Z",
+    "speed_limit": 35,
+    "road_name": "Market Street"
+  }
 }
 ```
 
+**Notes:**
+- Speed is in meters per second (m/s)
+- Heading is in degrees (0-360)
+- Accuracy is in meters
+- If no nearby road is found within 20 meters, `speed_limit` and `road_name` will be null
+
 #### GET /location/family/:familyId
 Get current locations of all visible family members.
+
+**Authentication Required:** Yes
 
 **Response:**
 ```json
 {
   "locations": [
     {
-      "userId": 1,
-      "name": "John Doe",
+      "user_id": 1,
+      "user_name": "John Doe",
       "latitude": 37.7749,
       "longitude": -122.4194,
-      "speed": 25.5,
-      "speedLimit": 35,
-      "timestamp": "2025-11-21T10:30:00Z",
-      "accuracy": 5.0
+      "speed": 15.6,
+      "heading": 90,
+      "accuracy": 5.0,
+      "altitude": 10.5,
+      "timestamp": "2025-11-22T01:18:57.051Z",
+      "speed_limit": 35
     }
   ]
 }
 ```
 
+**Notes:**
+- Only returns locations from the last 5 minutes
+- Only includes users with `is_visible = true`
+- Requester must be a member of the family
+
 #### GET /location/history/:userId
 Get location history for a specific user.
 
+**Authentication Required:** Yes
+
 **Query Parameters:**
-- `from`: ISO timestamp (default: 24 hours ago)
-- `to`: ISO timestamp (default: now)
-- `limit`: Number of points (default: 1000)
+- `start_time`: ISO 8601 timestamp (optional)
+- `end_time`: ISO 8601 timestamp (optional)
+- `limit`: Number of points (default: 100, max: 1000)
 
 **Response:**
 ```json
 {
+  "user_id": 2,
+  "count": 150,
   "history": [
     {
+      "id": 123,
       "latitude": 37.7749,
       "longitude": -122.4194,
-      "speed": 25.5,
-      "timestamp": "2025-11-21T10:30:00Z"
+      "speed": 15.6,
+      "heading": 90,
+      "accuracy": 5.0,
+      "altitude": 10.5,
+      "timestamp": "2025-11-22T01:18:57.051Z",
+      "speed_limit": 35
     }
-  ],
-  "count": 150
+  ]
 }
 ```
+
+**Notes:**
+- Requester must be in same family as target user, or be the target user
+- Results are ordered by timestamp DESC (newest first)
+
+#### GET /location/stats/:userId
+Get speed statistics for a user.
+
+**Authentication Required:** Yes
+
+**Response:**
+```json
+{
+  "user_id": 2,
+  "period": "24_hours",
+  "stats": {
+    "total_points": 1542,
+    "avg_speed": 12.3,
+    "max_speed": 28.5,
+    "speeding_incidents": 3,
+    "points_with_speed_limit": 1204,
+    "avg_overspeed": 2.1
+  }
+}
+```
+
+**Notes:**
+- Statistics are for the last 24 hours
+- `speeding_incidents`: Number of location points where speed > speed_limit
+- `avg_overspeed`: Average amount over speed limit when speeding (m/s)
+- Requester must be in same family as target user, or be the target user
 
 ### Speed Limits
 
